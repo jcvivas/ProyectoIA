@@ -1,0 +1,10 @@
+﻿@page "/diag"
+@rendermode InteractiveServer
+
+<h4>Diagnóstico interactividad</h4>
+<p>Count: @count</p>
+<button class="btn btn-primary" @onclick="() => count++">Incrementar</button>
+
+@code {
+    int count = 0;
+}

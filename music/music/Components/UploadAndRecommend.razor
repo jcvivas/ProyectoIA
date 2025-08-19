@@ -1,0 +1,320 @@
+﻿@page "/recomendar"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpFactory
+@using Microsoft.AspNetCore.Components.Forms
+@using music.Models
+@inject music.Services.IRecommendationApi Api
+@inject music.Services.IFeedbackApi FeedbackApi
+@inject NavigationManager Nav
+
+<div class="container" style="max-width:960px">
+    <div class="card" style="padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04)">
+        <h5 class="mb-3">Selecciona un archivo de audio</h5>
+
+        <!-- ÚNICO selector visible -->
+        <InputFile OnChange="OnFileChange"
+                   accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a,.aac,.wma,.au"
+                   class="form-control mb-3" />
+
+        <!-- ÚNICO mensaje de estado -->
+        <div role="status" aria-live="polite">
+            @if (selectedFile is not null)
+            {
+                <div class="alert alert-info py-2 mb-2">
+                    ✅ <strong>Archivo listo:</strong> @fileName
+                    <span class="text-muted">(@FormatSize(fileSize))</span>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="ClearFile">Quitar</button>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary py-2 mb-2">Ningún archivo seleccionado todavía.</div>
+            }
+        </div>
+
+        <div class="d-flex gap-2 mt-2">
+            <button class="btn btn-primary"
+                    @onclick="SendAsync"
+                    disabled="@(isBusy || selectedFile is null)">
+                @(isBusy ? "Procesando..." : "Recomendar")
+            </button>
+            <button class="btn btn-outline-secondary" @onclick="Clear" disabled="@isBusy">Limpiar</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger mt-3">@error</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(statusText))
+        {
+            <div class="mt-2 text-muted">@statusText</div>
+        }
+    </div>
+
+
+
+    @if (result is not null && result.recomendaciones?.Count > 0)
+    {
+        <div class="mt-4">
+            <h5>Género detectado: <em>@result.genero</em></h5>
+
+            <div class="row" style="display:flex; flex-wrap:wrap; gap:14px">
+                @foreach (var rec in result.recomendaciones)
+                {
+                    var id = rec.songId;
+                    var url = !string.IsNullOrWhiteSpace(id) ? $"{Nav.BaseUri.TrimEnd('/')}/api/audio/{Uri.EscapeDataString(id)}" : null;
+                    var likeState = (id is not null && itemLikes.TryGetValue(id, out var st)) ? st : null;
+
+                    <div class="card" style="width:260px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.08)">
+                        <div style="padding:12px">
+                            <div style="font-weight:700">@rec.titulo</div>
+                            <div class="muted">@rec.artista</div>
+
+                            @if (url is not null)
+                            {
+                                <audio @key="id" controls preload="none" src="@url" controlsList="nodownload"
+                                       style="width:100%; margin-top:.5rem"></audio>
+                            }
+                            else
+                            {
+                                <div class="text-warning mt-2">Sin preview</div>
+                            }
+
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button"
+                                        class="btn btn-sm @(likeState == true ? "btn-success" : "btn-outline-success")"
+                                        title="Me gusta"
+                                        @onclick="() => ToggleItemLike(id!, true)"
+                                        disabled="@string.IsNullOrWhiteSpace(id)">
+                                    👍
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm @(likeState == false ? "btn-danger" : "btn-outline-danger")"
+                                        title="No me gusta"
+                                        @onclick="() => ToggleItemLike(id!, false)"
+                                        disabled="@string.IsNullOrWhiteSpace(id)">
+                                    👎
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="card" style="padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,.08)">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <strong>¿Te gustaron las recomendaciones?</strong>
+                    <div class="btn-group" role="group" aria-label="Like general">
+                        <button type="button" class="btn @(overallLiked == true ? "btn-success" : "btn-outline-success")"
+                                @onclick="@(() => SetOverall(true))">
+                            Sí
+                        </button>
+                        <button type="button" class="btn @(overallLiked == false ? "btn-danger" : "btn-outline-danger")"
+                                @onclick="@(() => SetOverall(false))">
+                            No
+                        </button>
+                    </div>
+
+                    <span class="ms-3">Califica:</span>
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <button type="button" class="btn btn-link p-0"
+                                style="text-decoration:none; font-size:1.25rem"
+                                aria-label="@($"Calificación {i} de 5")"
+                                @onclick="@(() => SetRating(i))">
+                            @((i <= rating) ? "★" : "☆")
+                        </button>
+                    }
+                </div>
+
+                <div class="mt-3">
+                    <textarea class="form-control" rows="3"
+                              placeholder="Comentario (opcional)"
+                              @bind="comment"></textarea>
+                </div>
+
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary" @onclick="SendFeedbackAsync">Enviar feedback</button>
+                    @if (!string.IsNullOrWhiteSpace(statusText))
+                    {
+                        <span class="text-success">@statusText</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(error))
+                    {
+                        <span class="text-danger">@error</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+
+
+
+</div>
+
+@code {
+    private IBrowserFile? selectedFile;
+    private string? fileName;
+    private long fileSize;
+
+    private string? error;
+    private string statusText = string.Empty;
+    private bool isBusy;
+    private RecommendationResponse? result;
+    private string currentSessionId = Guid.NewGuid().ToString("N");
+    private bool? overallLiked = null; // null = sin seleccionar, true = sí, false = no
+    private int rating = 0;            // 0..5
+    private string? comment;
+
+    // like/dislike por pista
+    private Dictionary<string, bool?> itemLikes = new(StringComparer.OrdinalIgnoreCase);
+
+    private void SetOverall(bool value) => overallLiked = value;
+    private void SetRating(int value) => rating = value;
+
+    private void ToggleItemLike(string id, bool liked)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return;
+        if (!itemLikes.ContainsKey(id) || itemLikes[id] != liked)
+            itemLikes[id] = liked;
+        else
+            itemLikes[id] = null; // volver a neutro si clickea el mismo
+    }
+
+    private async Task SendFeedbackAsync()
+    {
+        if (result is null) return;
+
+        // construye items con el like por cancion
+        var items = result.recomendaciones?
+            .Where(r => !string.IsNullOrWhiteSpace(r.songId))
+            .Select(r => new
+            {
+                id = r.songId!,
+                titulo = string.IsNullOrWhiteSpace(r.titulo) ? r.songId! : r.titulo!,
+                liked = itemLikes.TryGetValue(r.songId!, out var v) ? v : (bool?)null
+            })
+            .ToArray() ?? Array.Empty<object>();
+
+        var payload = new
+        {
+            sessionId = currentSessionId,
+            genero = result.genero ?? "",
+            liked = overallLiked,                   // like/dislike global
+            rating = rating > 0 ? rating : (int?)null,
+            comment = string.IsNullOrWhiteSpace(comment) ? null : comment,
+            items
+        };
+
+        try
+        {
+            var http = HttpFactory.CreateClient();
+            http.BaseAddress = new Uri(Nav.BaseUri); // MUY IMPORTANTE
+            var resp = await http.PostAsJsonAsync("api/feedback", payload);
+            resp.EnsureSuccessStatusCode();
+            statusText = "¡Gracias por tu feedback!";
+            error = null;
+        }
+        catch (Exception ex)
+        {
+            error = "No se pudo enviar el feedback: " + ex.Message;
+        }
+    }
+
+
+    // === EVENTO: se dispara al elegir archivo ===
+    private async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;          // simple y directo
+            if (file is null)
+            {
+                ClearFile();
+                statusText = "Sin archivo.";
+            }
+            else
+            {
+                selectedFile = file;
+                fileName = file.Name;
+                fileSize = (long)file.Size;
+                statusText = $"Archivo seleccionado: {fileName} ({FormatSize(fileSize)})";
+            }
+            await InvokeAsync(StateHasChanged); // fuerza refresco inmediato
+        }
+        catch (Exception ex)
+        {
+            error = $"Error leyendo selección: {ex.Message}";
+            ClearFile();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static string GetIdFromTitle(string? titulo)
+    {
+        if (string.IsNullOrWhiteSpace(titulo)) return string.Empty;
+        // elimina extensión si viniera (por seguridad)
+        return System.IO.Path.GetFileNameWithoutExtension(titulo);
+    }
+
+    private string AudioUrl(string id)
+    {
+        var baseUri = Nav.BaseUri.TrimEnd('/');
+        // tu endpoint /api/audio/{id} resuelve wav/mp3 internamente
+        return $"{baseUri}/api/audio/{Uri.EscapeDataString(id)}";
+    }
+
+
+
+    private async Task SendAsync()
+    {
+        if (selectedFile is null) return;
+
+        isBusy = true;
+        error = null;
+        result = null;
+        statusText = "Enviando…";
+
+        try
+        {
+            result = await Api.RecommendByFileAsync(selectedFile, CancellationToken.None);
+            statusText = "Recomendaciones recibidas.";
+        }
+        catch (HttpRequestException ex)
+        {
+            error = ex.Message;
+            statusText = "Fallo al consultar la API.";
+        }
+        catch (Exception ex)
+        {
+            error = $"Error inesperado: {ex.Message}";
+            statusText = "Error inesperado.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void Clear()
+    {
+        error = null; statusText = "Limpio."; result = null;
+        ClearFile();
+    }
+
+    private void ClearFile()
+    {
+        selectedFile = null; fileName = null; fileSize = 0;
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        string[] suf = { "B", "KB", "MB", "GB" };
+        double d = bytes; int i = 0;
+        while (d >= 1024 && i < suf.Length - 1) { d /= 1024; i++; }
+        return $"{d:0.##} {suf[i]}";
+    }
+}

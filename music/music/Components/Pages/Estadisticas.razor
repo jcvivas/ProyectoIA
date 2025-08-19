@@ -1,0 +1,179 @@
+﻿@page "/estadisticas"
+@inject IHttpClientFactory HttpFactory
+@inject NavigationManager Nav
+@using music.Models
+
+<h3 class="mb-3">Estadísticas</h3>
+
+@if (data is null)
+{
+    <div>Cargando…</div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="mb-2">Predicciones por género</h5>
+                @if (data.porGenero?.Count > 0)
+                {
+                    <svg width="100%" height="@BarSvgHeight" viewBox="0 0 @BarSvgWidth @BarSvgHeight" role="img" aria-label="Barras por género">
+                        @foreach (var bar in BarData())
+                        {
+                            <g>
+                                <rect x="@bar.X" y="@bar.Y" width="@bar.W" height="@BarH" fill="#0d6efd" rx="4" ry="4"></rect>
+                                <text x="@LabelX" y="@(bar.Y + BarH * 0.75)" font-size="12" fill="#ddd">@bar.Label</text>
+                                <text x="@(bar.X + bar.W + 6)" y="@(bar.Y + BarH * 0.75)" font-size="12" fill="#aaa">@bar.Value</text>
+                            </g>
+                        }
+                    </svg>
+                }
+                else
+                {
+                    <div class="text-muted">Sin datos todavía.</div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="mb-2">Likes vs Dislikes</h5>
+                @if (TotalVotes > 0)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <svg width="160" height="160" viewBox="0 0 120 120" role="img" aria-label="Donut likes/dislikes">
+                            <defs>
+                                <linearGradient id="gLike" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#28a745" />
+                                    <stop offset="100%" stop-color="#51cf66" />
+                                </linearGradient>
+                                <linearGradient id="gDislike" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#dc3545" />
+                                    <stop offset="100%" stop-color="#ff6b6b" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="60" cy="60" r="46" stroke="rgba(255,255,255,.15)" stroke-width="14" fill="none" />
+                            <circle cx="60" cy="60" r="46"
+                                    stroke="url(#gLike)"
+                                    stroke-width="14"
+                                    fill="none"
+                                    stroke-dasharray="@LikeDash"
+                                    stroke-dashoffset="@LikeOffset"
+                                    transform="rotate(-90 60 60)" />
+                            <circle cx="60" cy="60" r="46"
+                                    stroke="url(#gDislike)"
+                                    stroke-width="14"
+                                    fill="none"
+                                    stroke-dasharray="@DislikeDash"
+                                    stroke-dashoffset="@DislikeOffset"
+                                    transform="rotate(@DislikeRotate 60 60)" />
+                            <text x="60" y="64" text-anchor="middle" font-size="18" fill="#fff" font-weight="600">
+                                @LikePctText%
+                            </text>
+                        </svg>
+                        <div>
+                            <div><span class="dot dot-like"></span> Likes: <strong>@data.likesTotales</strong></div>
+                            <div><span class="dot dot-dislike"></span> Dislikes: <strong>@data.dislikesTotales</strong></div>
+                            <div class="text-muted mt-1">Total votos: @TotalVotes</div>
+                            <div class="text-muted">Rating prom.: <strong>@data.ratingPromedio</strong> (@data.ratingsCount)</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted">Aún sin likes/dislikes.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-3 mt-4">
+        <h5 class="mb-2">Top reproducciones</h5>
+        @if (data.topReproducciones?.Count > 0)
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var it in data.topReproducciones)
+                {
+                    <li class="d-flex justify-content-between border-bottom py-1">
+                        <span>@it.id</span>
+                        <span class="text-muted">@it.conteo</span>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="text-muted">Aún no hay reproducciones.</div>
+        }
+    </div>
+
+    <div class="card p-3 mt-3">
+        <h5 class="mb-2">Más “me gusta” por canción</h5>
+        @if (data.topLikes?.Count > 0)
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var it in data.topLikes)
+                {
+                    <li class="d-flex justify-content-between border-bottom py-1">
+                        <span>@it.id</span>
+                        <span class="text-muted">@it.conteo</span>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="text-muted">Pulsa 👍 en las tarjetas para ver ranking.</div>
+        }
+    </div>
+}
+
+@code {
+    private StatsResponse? data;
+
+    // ====== BAR CHART ======
+    private const int BarSvgWidth = 560;
+    private const int BarH = 18;
+    private const int BarGap = 12;
+    private const int LabelX = 8;
+
+    private int BarSvgHeight => data?.porGenero is null ? 80
+        : Math.Max(80, data.porGenero.Count * (BarH + BarGap) + 12);
+
+    private IEnumerable<(int X, int Y, int W, string Label, int Value)> BarData()
+    {
+        if (data?.porGenero is null || data.porGenero.Count == 0)
+            yield break;
+
+        var max = data.porGenero.Max(x => x.conteo);
+        var innerW = BarSvgWidth - 120; // margen izq para label y der para valor
+        var y = 10;
+
+        foreach (var g in data.porGenero)
+        {
+            var w = max > 0 ? (int)Math.Round((g.conteo * 1.0 / max) * innerW) : 0;
+            yield return (X: 100, Y: y, W: w, Label: g.genero, Value: g.conteo);
+            y += BarH + BarGap;
+        }
+    }
+
+    // ====== DONUT CHART ======
+    private int TotalVotes => (data?.likesTotales ?? 0) + (data?.dislikesTotales ?? 0);
+    private double LikePct => TotalVotes > 0 ? (data!.likesTotales * 1.0 / TotalVotes) : 0.0;
+    private string LikePctText => (LikePct * 100).ToString("0");
+
+    private const double R = 46.0;
+    private double C => 2 * Math.PI * R;
+    private string LikeDash => $"{C * LikePct:0.###} {C:0.###}";
+    private string DislikeDash => $"{C * (1 - LikePct):0.###} {C:0.###}";
+    private double LikeOffset => 0;                // arranca arriba (rotated -90)
+    private double DislikeOffset => 0;
+    private double DislikeRotate => (LikePct * 360) - 90; // arranca donde termina el like
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = HttpFactory.CreateClient();
+        http.BaseAddress = new Uri(Nav.BaseUri);
+        data = await http.GetFromJsonAsync<StatsResponse>("api/stats");
+    }
+}

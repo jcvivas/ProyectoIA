@@ -1,0 +1,11 @@
+﻿@code {
+    [Parameter] public Exception? Exception { get; set; }
+}
+
+<div class="alert alert-danger mt-3">
+    <strong>Ups.</strong> Ocurrió un error inesperado en la interfaz.
+    @if (Exception is not null)
+    {
+        <div class="muted" style="margin-top:6px">Detalle: @Exception.Message</div>
+    }
+</div>

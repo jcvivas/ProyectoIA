@@ -1,0 +1,315 @@
+:root {
+    --bg: #0f1222;
+    --panel: #151836;
+    --text: #e9ebff;
+    --muted: #a9afd7;
+    --primary: #8b9dff;
+    --outline: #3b3f6b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: radial-gradient(1000px 600px at 15% -10%, #1b1f44 0, transparent 80%), radial-gradient(800px 500px at 85% -10%, #252a60 0, transparent 80%), linear-gradient(180deg, var(--bg), #0b0e1b 60%, #0a0d19);
+    background-attachment: fixed;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    background: rgba(10,12,24,.4);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+}
+
+    .brand .logo {
+        font-size: 24px;
+    }
+
+    .brand .title {
+        font-weight: 800;
+        letter-spacing: .3px;
+    }
+
+.nav {
+    display: flex;
+    gap: 12px;
+}
+
+.nav-link {
+    color: var(--muted);
+    text-decoration: none;
+    padding: 10px 8px;
+    border-radius: 8px;
+}
+
+    .nav-link:hover {
+        color: var(--text);
+        background: rgba(255,255,255,.05);
+    }
+
+.content {
+    padding: 32px 0 60px;
+}
+
+.hero {
+    padding: 52px 0 24px;
+}
+
+.hero-inner {
+    text-align: center;
+}
+
+.hero h1 {
+    margin: 0 0 8px;
+    font-size: clamp(28px, 5vw, 40px);
+}
+
+.lead {
+    color: var(--muted);
+    margin: 0 auto 16px;
+    max-width: 720px;
+}
+
+.hero-actions {
+    display: inline-flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: 1px solid var(--outline);
+    text-decoration: none;
+    color: var(--text);
+}
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #0c0f22;
+}
+
+.btn-outline {
+    background: transparent;
+}
+
+.disabled {
+    opacity: .6;
+    pointer-events: none;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.features {
+    padding: 28px 0 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.card {
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.footer {
+    border-top: 1px solid rgba(255,255,255,.06);
+    background: rgba(10,12,24,.4);
+    backdrop-filter: blur(6px);
+    padding: 18px 0;
+}
+
+
+.song-id-input {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 0 .5rem .5rem 0; /* solo la derecha */
+    color: #fff;
+}
+
+    .song-id-input::placeholder {
+        color: rgba(255,255,255,.5);
+    }
+
+.input-group-text {
+    color: #fff;
+    border-radius: .5rem 0 0 .5rem; /* solo la izquierda */
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+
+/* Deshabilita el "label-botón" cuando isBusy */
+.btn.btn-disabled {
+    pointer-events: none;
+    opacity: .6;
+}
+/* Opcional: cursor bonito para el label */
+.selectable {
+    cursor: pointer;
+}
+
+.song-id-input {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 0 .5rem .5rem 0; /* solo la derecha */
+    color: #fff;
+}
+
+    .song-id-input::placeholder {
+        color: rgba(255,255,255,.5);
+    }
+
+.input-group-text {
+    color: #fff;
+    border-radius: .5rem 0 0 .5rem; /* solo la izquierda */
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+/* --- File picker bonito --- */
+.file-uploader {
+    position: relative;
+    display: inline-block;
+}
+
+.file-input-overlay {
+    position: absolute;
+    inset: 0; /* top/right/bottom/left:0 */
+    opacity: 0; /* invisible */
+    z-index: 2; /* por encima del botón */
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+/* Botón pastilla */
+.btn-pill {
+    border-radius: 14px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg,#7c8cff,#6c79f8);
+    color: #111;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(108,121,248,.25);
+}
+
+    .btn-pill:hover {
+        filter: brightness(1.05);
+    }
+
+    .btn-pill:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+/* Chip del archivo */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid rgba(255,255,255,.12);
+    padding: .5rem .75rem;
+    border-radius: .75rem;
+    background: rgba(255,255,255,.05);
+}
+
+/* Icono peque */
+.icon {
+    opacity: .8;
+    font-size: .95rem;
+}
+
+
+.card {
+    background: #0f1220;
+    color: #e8e8ea;
+}
+
+    .card .form-control {
+        background: #171a2b;
+        border: 1px solid #2a2e44;
+        color: #e8e8ea;
+    }
+
+    .card .input-group-text {
+        background: #171a2b;
+        border: 1px solid #2a2e44;
+        color: #c3c6d1;
+    }
+
+.btn-primary {
+    background: #6c7cff;
+    border-color: #6c7cff;
+}
+
+.btn-outline-secondary {
+    border-color: #2a2e44;
+    color: #c3c6d1;
+}
+
+.bar {
+    background: rgba(255,255,255,.08);
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+}
+
+    .bar .bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0d6efd 0%, #6ea8fe 100%);
+    }
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.dot-like {
+    background: #28a745;
+}
+
+.dot-dislike {
+    background: #dc3545;
+}
+

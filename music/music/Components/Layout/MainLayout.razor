@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Web
+
+<HeadContent>
+
+    <link rel="stylesheet" href="/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="/app.css" />
+</HeadContent>
+
+<header class="topbar">
+    <div class="container">
+        <div class="brand">
+            <span class="logo">🎧</span>
+            <span class="title">MelodIA</span>
+        </div>
+        <nav class="nav">
+            <a href="/" class="nav-link">Inicio</a>
+            <a href="/estadisticas" class="nav-link">Estadísticas</a>
+        </nav>
+
+    </div>
+</header>
+
+<main class="container content">
+    @Body
+</main>
+<script src="/_framework/blazor.web.js"></script>
+
+<footer class="footer">
+    <div class="container">
+        <small>© @DateTime.Now.Year MelodIA — Blazor Server</small>
+    </div>
+</footer>

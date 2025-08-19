@@ -1,0 +1,18 @@
+﻿@using music.Models
+
+@if (Item is not null)
+{
+    <div class="card rec-card">
+        <img src="@Item.caratula"
+             alt="Carátula de @Item.titulo"
+             class="rec-img" />
+        <div class="rec-body">
+            <div class="rec-title">@Item.titulo</div>
+            <div class="rec-artist">@Item.artista</div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public RecommendationItem? Item { get; set; }
+}

@@ -1,0 +1,29 @@
+﻿@page "/test-upload"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+
+<h3>Prueba InputFile</h3>
+
+<InputFile OnChange="OnFileChange" accept="audio/*" />
+
+@if (_file is not null)
+{
+    <p><strong>Seleccionado:</strong> @_file.Name (@_file.Size bytes)</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+    <p style="color:gray">Estado: @_status</p>
+}
+
+@code {
+    IBrowserFile? _file;
+    string _status = "Sin archivo.";
+
+    private void OnFileChange(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+        _status = _file is null ? "Sin archivo." : $"OK: {_file.Name}";
+        StateHasChanged();
+    }
+}
