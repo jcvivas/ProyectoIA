@@ -1,7 +1,3 @@
-# ProyectoIAAquí tienes un **README** listo para tu repo. Cópialo como `README.md` en la raíz del proyecto.
-
----
-
 # MelodIA (Blazor Server + Python/TensorFlow)
 
 Clasificador de género musical con recomendaciones por similitud.
